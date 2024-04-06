@@ -9,6 +9,8 @@ import numpy as np
 from tensorflow.keras.preprocessing.image import load_img, img_to_array
 from tensorflow.keras.utils import to_categorical
 from sklearn.preprocessing import LabelEncoder
+from tensorflow_model_optimization.quantization.keras import vitis_quantize
+from tensorflow.keras.utils import plot_model
 
 def custom_data_generator(directory, target_size, batch_size):
     gender_labels = {'female': 0, 'male': 1}
@@ -85,22 +87,6 @@ model.compile(optimizer='adam',
               loss={'gender_output': 'categorical_crossentropy', 'age_output': 'categorical_crossentropy'},
               metrics={'gender_output': 'accuracy', 'age_output': 'mae'})
 
-# Create the ImageDataGenerator for training data
-# train_datagen = ImageDataGenerator(rescale=1./255, validation_split=0.2)
-# train_generator = train_datagen.flow_from_directory(
-#     './data/UTKFace',
-#     target_size=input_shape[:2],
-#     batch_size=32,
-#     class_mode='categorical',
-#     subset='training')
-
-# # Create the ImageDataGenerator for validation data
-# val_generator = train_datagen.flow_from_directory(
-#     './data/UTKFace',
-#     target_size=input_shape[:2],
-#     batch_size=32,
-#     class_mode='categorical',
-#     subset='validation')
 
 train_generator = custom_data_generator(
     directory='./data/UTKFace',
@@ -111,9 +97,31 @@ train_generator = custom_data_generator(
 model.fit(train_generator, epochs=10, steps_per_epoch=200)  # Adjust steps_per_epoch based on your dataset size
 
 model.summary()
+plot_model(model, to_file='gender_age_model.png', show_shapes=True, show_layer_names=True)
 
-# Train the model
-#history = model.fit(train_generator, epochs=2, validation_data=val_generator)
+N = 500  # Number of images you want to extract
+image_count = 0
+X_train = []  # Initialize an empty list to store your images
 
-# Save the model
-#model.save('age_gender_classification_model.h5')
+for X_batch, _ in train_generator:
+    # Add the images in the current batch to the X_train list
+    X_train.extend(X_batch)
+    image_count += len(X_batch)
+    
+    # Break the loop once we have collected enough images
+    if image_count >= N:
+        break
+
+X_train = X_train[:N]
+X_train = np.array(X_train)
+
+print("Shape of X_train:", X_train.shape)
+
+# Quantize and store AI models
+quantizer = vitis_quantize.VitisQuantizer(model)
+
+# Number of data sets to be passed is between 100-1000 without labels, so let's use 500
+quantized_model = quantizer.quantize_model(calib_dataset=X_train[0:500])
+
+# Save the quantized model
+quantized_model.save("quantized_gender_age_model.h5")
