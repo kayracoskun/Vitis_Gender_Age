@@ -67,6 +67,7 @@ for i, filename in enumerate(image_filenames):
     inference_duration_ms = (inference_end_time - inference_start_time) * 1000
     total_inference_duration_ms += inference_duration_ms
 
+    print("Output data is" + outputData)
     resultList = np.asarray(outputData[0])[0]
     resultIdx = resultList.argmax()
     resultVal = resultList[resultIdx]
