@@ -1,0 +1,10 @@
+{
+    "lib": "libvart-dpu-runner.so",
+    "filename": "DPU_C1_B2304.xmodel",
+    "kernel": [
+        "subgraph_quant_batch_normalization",
+        "subgraph_quant_age_output(TransferMatMulToConv2d)",
+        "subgraph_quant_gender_output(TransferMatMulToConv2d)"
+    ],
+    "target": "DPUCZDX8G_ISA1_B2304"
+}
