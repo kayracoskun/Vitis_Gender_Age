@@ -38,6 +38,8 @@ for i, filename in enumerate(image_filenames):
     #image = cv2.imread(IMG_PATH, cv2.IMREAD_GRAYSCALE)
     image = cv2.imread(IMG_PATH)
 
+    image = cv2.resize(image, (224, 224))
+
     # normalization
     image = image / 255.0
 
@@ -66,8 +68,7 @@ for i, filename in enumerate(image_filenames):
     # Inference duration for this image
     inference_duration_ms = (inference_end_time - inference_start_time) * 1000
     total_inference_duration_ms += inference_duration_ms
-
-    print("Output data is" + outputData)
+  
     resultList = np.asarray(outputData[0])[0]
     resultIdx = resultList.argmax()
     resultVal = resultList[resultIdx]
